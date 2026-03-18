@@ -1,0 +1,116 @@
+---
+# =============================================================================
+# opnsense-setup.yml
+# Configuration post-installation OPNsense — securlab.internal
+#
+# Ce playbook configure :
+#   1. Unbound DNS — interfaces LAN + DMZ, domaine securlab.internal
+#   2. Règles firewall LAN
+#   3. Règles firewall DMZ
+#   4. Désactivation règle IPv6 par défaut LAN
+#
+# Note : Les éléments suivants restent manuels (limitation API OPNsense) :
+#   - Assignation des interfaces (vtnet0→WAN, vtnet1→LAN, vtnet2→OPT1)
+#   - Configuration DNS système (endpoint non disponible en API)
+#   - Règles WAN (traitées dans le projet VPN)
+#
+# Prérequis :
+#   pip install httpx
+#   ansible-galaxy collection install oxlorg.opnsense
+#   Credentials API dans group_vars/all.yml
+#
+# Usage :
+#   ansible-playbook -i inventory/hosts.yml opnsense-setup.yml
+#   ansible-playbook -i inventory/hosts.yml opnsense-setup.yml --check -D
+#   ansible-playbook -i inventory/hosts.yml opnsense-setup.yml --tags dns
+#   ansible-playbook -i inventory/hosts.yml opnsense-setup.yml --tags firewall
+# =============================================================================
+
+- name: Configuration post-installation OPNsense — securlab.internal
+  hosts: opnsense-fw
+  connection: local
+  gather_facts: false
+
+  module_defaults:
+    group/oxlorg.opnsense.all:
+      firewall: "{{ opnsense_host }}"
+      api_key: "{{ opnsense_api_key }}"
+      api_secret: "{{ opnsense_api_secret }}"
+      ssl_verify: "{{ opnsense_ssl_verify }}"
+
+  tasks:
+
+    # ─── 1. UNBOUND DNS ──────────────────────────────────────────────────────
+    - name: "DNS | Configuration Unbound"
+      oxlorg.opnsense.unbound_general:
+        enabled: true
+        port: 53
+        interfaces: "{{ unbound_listen_interfaces }}"
+        register_dhcp_leases: true
+        dhcp_domain: "{{ domain_internal }}"
+        local_zone_type: "transparent"
+        dnssec: false
+        reload: true
+      tags: dns
+
+    # ─── 2. RÈGLES FIREWALL LAN ──────────────────────────────────────────────
+    - name: "Firewall | Règles LAN"
+      oxlorg.opnsense.rule:
+        description: "{{ item.description }}"
+        action: "{{ item.action }}"
+        interface: "{{ item.interface }}"
+        direction: "in"
+        ip_protocol: "inet"
+        protocol: "any"
+        source_net: "{{ item.source_net }}"
+        destination_net: "{{ item.destination_net }}"
+        log: "{{ item.log }}"
+        sequence: "{{ item.sequence }}"
+        match_fields:
+          - description
+        state: present
+      loop: "{{ lan_rules }}"
+      loop_control:
+        label: "{{ item.description }}"
+      notify: Recharger les règles firewall
+      tags: firewall
+
+    # ─── 3. RÈGLES FIREWALL DMZ ──────────────────────────────────────────────
+    - name: "Firewall | Règles DMZ"
+      oxlorg.opnsense.rule:
+        description: "{{ item.description }}"
+        action: "{{ item.action }}"
+        interface: "{{ item.interface }}"
+        direction: "in"
+        ip_protocol: "inet"
+        protocol: "any"
+        source_net: "{{ item.source_net }}"
+        destination_net: "{{ item.destination_net }}"
+        log: "{{ item.log }}"
+        sequence: "{{ item.sequence }}"
+        match_fields:
+          - description
+        state: present
+      loop: "{{ dmz_rules }}"
+      loop_control:
+        label: "{{ item.description }}"
+      notify: Recharger les règles firewall
+      tags: firewall
+
+    # ─── 4. DÉSACTIVATION IPv6 LAN ───────────────────────────────────────────
+    - name: "Firewall | Désactiver règle IPv6 par défaut LAN"
+      oxlorg.opnsense.rule:
+        description: "Default allow LAN IPv6 to any rule"
+        match_fields:
+          - description
+        enabled: false
+        state: present
+      failed_when: false
+      tags: firewall
+
+  handlers:
+    - name: Recharger les règles firewall
+      oxlorg.opnsense.reload:
+        target: 'rule'
+
+        

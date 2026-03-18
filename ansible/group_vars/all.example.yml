@@ -1,0 +1,83 @@
+---
+# =============================================================================
+# group_vars/all.yml
+# Variables de configuration — adapter à votre environnement
+#
+# IMPORTANT : Ne jamais committer ce fichier avec de vraies valeurs
+# Chiffrer avec : ansible-vault encrypt group_vars/all.yml
+# =============================================================================
+
+# ─── Connexion OPNsense ───────────────────────────────────────────────────────
+opnsense_host: "192.168.1.x"
+opnsense_api_key: "VOTRE_API_KEY"
+opnsense_api_secret: "VOTRE_SECRET"
+opnsense_ssl_verify: false
+
+# ─── Domaine et DNS ───────────────────────────────────────────────────────────
+domain_internal: "votre_domaine"
+dns_server_primary: "8.8.8.8"
+dns_server_secondary: "8.8.4.4"
+
+# Interfaces Unbound — WAN exclu
+unbound_listen_interfaces:
+  - "lan"
+  - "opt1"
+
+# ─── Plages réseau ────────────────────────────────────────────────────────────
+lan_network: "10.10.0.0/24"
+dmz_network: "10.20.0.0/24"
+mgmt_network: "10.30.0.0/24"
+
+# ─── Règles firewall LAN ──────────────────────────────────────────────────────
+lan_rules:
+
+  - description: "Block LAN vers DMZ"
+    action: "block"
+    interface: "lan"
+    source_net: "lan"
+    destination_net: "{{ dmz_network }}"
+    log: true
+    sequence: 1
+
+  - description: "Block LAN vers MGMT"
+    action: "block"
+    interface: "lan"
+    source_net: "lan"
+    destination_net: "{{ mgmt_network }}"
+    log: true
+    sequence: 2
+
+  - description: "Pass LAN vers internet"
+    action: "pass"
+    interface: "lan"
+    source_net: "lan"
+    destination_net: "any"
+    log: false
+    sequence: 3
+
+# ─── Règles firewall DMZ ──────────────────────────────────────────────────────
+dmz_rules:
+
+  - description: "Block DMZ vers LAN"
+    action: "block"
+    interface: "opt1"
+    source_net: "opt1"
+    destination_net: "{{ lan_network }}"
+    log: true
+    sequence: 1
+
+  - description: "Block DMZ vers MGMT"
+    action: "block"
+    interface: "opt1"
+    source_net: "opt1"
+    destination_net: "{{ mgmt_network }}"
+    log: true
+    sequence: 2
+
+  - description: "Pass DMZ vers internet"
+    action: "pass"
+    interface: "opt1"
+    source_net: "opt1"
+    destination_net: "any"
+    log: false
+    sequence: 3

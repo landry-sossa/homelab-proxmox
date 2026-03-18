@@ -1,0 +1,13 @@
+# Credentials — ne jamais committer
+ansible/group_vars/all.yml
+*.vault
+*.key
+*.secret
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Ansible
+*.retry
+.ansible/
