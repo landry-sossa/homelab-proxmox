@@ -1,20 +1,20 @@
 # Homelab Proxmox — Infrastructure Complète
 
 > **Projet 0 — Fondation de tous les projets lab**
-> Documentation complète de la conception, installation et configuration d'une infrastructure virtualisée sur serveur physique dédié.
+> Documentation complète de la conception, installation et configuration d'une infrastructure virtualisée sur serveur physique dédié. 
 
 ---
 
 ## Table des matières
 
-- [Introduction & Objectifs](#introduction--objectifs)
-- [Matériel & Prérequis](#matériel--prérequis)
+- [Introduction & Objectifs](#introduction-objectifs)
+- [Matériel & Prérequis](#matériel-prérequis)
 - [Architecture réseau](#architecture-réseau)
 - [Installation Proxmox](#installation-proxmox)
 - [Installation OPNsense](#installation-opnsense)
 - [Configuration OPNsense](#configuration-opnsense)
 - [Installation et Configuration Windows Server](#installation-et-configuration-windows-server)
-- [Tests & Validation](#tests--validation)
+- [Tests & Validation](#tests-validation)
 - [Prochaines étapes](#prochaines-étapes)
 
 ---
@@ -23,7 +23,7 @@
 
 ### Contexte
 
-Ce projet documente la mise en place d'une infrastructure virtualisée complète sur serveur physique dédié. L'objectif est simple : disposer d'un environnement stable et segmenté qui simule un réseau d'entreprise réel, sur lequel je peux déployer et expérimenter mes projets futurs en administration système, cloud et sécurité.
+Ce projet documente la mise en place d'une infrastructure virtualisée complète sur serveur physique dédié. L'objectif est simple : disposer d'un environnement stable et segmenté qui simule un réseau d'entreprise réel, sur lequel je peux déployer et expérimenter mes projets futurs en système, cloud et sécurité.
 
 Chaque choix technique documenté ici a été réfléchi et appliqué comme en environnement de production.
 
@@ -85,12 +85,12 @@ Chaque choix technique documenté ici a été réfléchi et appliqué comme en e
 
 ### Connectique réseau utilisée
 
-Le MS01 dispose de 4 interfaces réseau mais seule `nic0` (RJ45) est utilisée physiquement — branchée sur la box FAI. Les bridges `vmbr1` et `vmbr2` sont des réseaux 100% internes à Proxmox sans carte physique associée.
+Le MS01 dispose de 4 interfaces réseau mais seule `nic0` (RJ45) est utilisée physiquement branchée sur la box FAI. Les bridges `vmbr1` et `vmbr2` sont des réseaux 100% internes à Proxmox sans carte physique associée.
 
 | Interface physique | Utilisation |
 |-------------------|-------------|
-| `nic0` (RJ45) | Connectée à la box — `vmbr0` |
-| `nic1` (RJ45) | Non utilisée — réservée |
+| `nic0` (RJ45) | Connectée à la box `vmbr0` |
+| `nic1` (RJ45) | Non utilisée réservée |
 | `nic2` / `nic3` (SFP+) | Non utilisées |
 | `wlp89s0` (WiFi) | Disponible mais non recommandée pour un usage serveur |
 
@@ -129,9 +129,9 @@ L'infrastructure est segmentée en **3 zones réseau distinctes**, chacune avec 
  
 | Zone | Bridge Proxmox | Plage IP | Rôle |
 |------|---------------|----------|------|
-| WAN | `vmbr0` | `192.168.1.x` | Connexion vers la box FAI — Internet simulé |
-| LAN | `vmbr1` | `10.10.0.x/24` | Infrastructure interne — serveurs, AD, BDD |
-| DMZ | `vmbr2` | `10.20.0.x/24` | Services exposés — reverse proxy |
+| WAN | `vmbr0` | `192.168.1.x` | Connexion vers la box FAI Internet simulé |
+| LAN | `vmbr1` | `10.10.0.x/24` | Infrastructure interne serveurs, AD, BDD |
+| DMZ | `vmbr2` | `10.20.0.x/24` | Services exposés reverse proxy |
  
 ---
  
@@ -149,7 +149,7 @@ L'infrastructure est segmentée en **3 zones réseau distinctes**, chacune avec 
  
 ### Politique de sécurité réseau
  
-Les règles firewall OPNsense implémentent le principe du **moindre privilège** — seuls les flux nécessaires sont autorisés.
+Les règles firewall OPNsense implémentent le principe du **moindre privilège** seuls les flux nécessaires sont autorisés.
  
 | Source | Destination | Règle | Justification |
 |--------|-------------|-------|---------------|
@@ -164,7 +164,7 @@ Les règles firewall OPNsense implémentent le principe du **moindre privilège*
  
 ### Fonctionnement du DNS
  
-Toutes les VMs pointent vers OPNsense comme résolveur DNS — pas directement vers Windows Server.
+Toutes les VMs pointent vers OPNsense comme résolveur DNS  pas directement vers Windows Server.
  
  
 > Ce choix centralise la résolution DNS sur OPNsense. Si Windows Server change d'IP, on modifie uniquement le Query Forwarding dans OPNsense — pas la configuration de toutes les VMs.
@@ -258,7 +258,7 @@ Ne jamais utiliser `root` au quotidien.
  
 Scanner le QR code avec Google Authenticator ou Authy. Le code à 6 chiffres est requis à chaque connexion.
  
-> Le 2FA est activé avant de désactiver root — pour ne jamais se retrouver bloqué hors de l'interface.
+> Le 2FA est activé avant de désactiver root pour ne jamais se retrouver bloqué hors de l'interface.
  
 **3. Créer l'utilisateur Linux et sécuriser SSH**
  
@@ -300,7 +300,7 @@ systemctl restart sshd
 ---
 ## Installation OPNsense
  
-OPNsense est la première VM à créer et configurer — toutes les autres VMs dépendent de lui pour accéder à internet, au DNS et au routage entre les zones.
+OPNsense est la première VM à créer et configurer toutes les autres VMs dépendent de lui pour accéder à internet, au DNS et au routage entre les zones.
  
 ---
  
@@ -344,7 +344,7 @@ ISO officielle : [https://opnsense.org/download/](https://opnsense.org/download/
  
 | Paramètre | Valeur | Justification |
 |-----------|--------|---------------|
-| BIOS | `SeaBIOS` | OVMF (UEFI) incompatible avec l'ISO OPNsense 26.x — la VM tente de booter par PXE au lieu de l'ISO |
+| BIOS | `SeaBIOS` | OVMF (UEFI) incompatible avec l'ISO OPNsense 26.x la VM tente de booter par PXE au lieu de l'ISO |
 | Machine | `pc-i440fx` | Compatibilité optimale avec OPNsense sous KVM |
  
 **Onglet Disks**
@@ -352,7 +352,7 @@ ISO officielle : [https://opnsense.org/download/](https://opnsense.org/download/
 | Paramètre | Valeur | Justification |
 |-----------|--------|---------------|
 | Storage | `local-lvm` | Pool LVM-Thin Proxmox |
-| Disk size | `20 Go` | Suffisant — OPNsense stocke uniquement sa config et ses logs |
+| Disk size | `20 Go` | Suffisant  OPNsense stocke uniquement sa config et ses logs |
 | Cache | `Write back` | Améliore les performances I/O d'environ 30% |
  
 **Onglet CPU**
@@ -362,7 +362,7 @@ ISO officielle : [https://opnsense.org/download/](https://opnsense.org/download/
 | Cores | `2` | Suffisant pour un firewall lab |
 | Type | `host` | Expose les vraies instructions du CPU — active AES-NI pour le chiffrement VPN |
  
-> **Pourquoi CPU type `host` ?** Le type `kvm64` par défaut masque les instructions natives du processeur. Le type `host` expose directement les instructions de l'Intel i5-12600H — notamment **AES-NI** qui accélère significativement le chiffrement WireGuard et OpenVPN.
+> **Pourquoi CPU type `host` ?** Le type `kvm64` par défaut masque les instructions natives du processeur. Le type `host` expose directement les instructions de l'Intel i5-12600H  notamment **AES-NI** qui accélère significativement le chiffrement WireGuard et OpenVPN.
  
 **Onglet Memory**
  
@@ -377,7 +377,7 @@ ISO officielle : [https://opnsense.org/download/](https://opnsense.org/download/
 | Bridge | `vmbr0` |
 | Model | `VirtIO` |
  
-> Ne pas démarrer la VM immédiatement — il faut d'abord ajouter les 2 interfaces réseau manquantes.
+> Ne pas démarrer la VM immédiatement il faut d'abord ajouter les 2 interfaces réseau manquantes.
  
 ![Paramètres hardware VM OPNsense](images/opnsense-vm-hardware.png)
  
@@ -415,7 +415,7 @@ La VM doit avoir exactement 3 interfaces réseau :
  
 Démarrer la VM et ouvrir la console noVNC.
  
-**Problème rencontré — boot PXE au lieu de l'ISO**
+**Problème rencontré boot PXE au lieu de l'ISO**
  
 Lors du premier test avec BIOS `OVMF (UEFI)`, la VM tentait de booter par le réseau (PXE) au lieu de l'ISO. Erreurs affichées :
 ```
@@ -453,7 +453,7 @@ Sélectionner `Install (UFS)`.
 Utilisez le mode MBR en premier, puis terminez l'installation.  
 Si OPNsense ne démarre pas, revenez à cette étape et choisissez un autre mode de partitionnement.essaye le GPT qui va essayer de creer une petite partition boot 
  
-> **Pourquoi UFS et non ZFS ?** ZFS est recommandé pour les serveurs de stockage avec plusieurs disques — RAID, snapshots, déduplication. Pour un firewall qui stocke uniquement sa configuration et ses logs, UFS est largement suffisant et plus léger.
+> **Pourquoi UFS et non ZFS ?** ZFS est recommandé pour les serveurs de stockage avec plusieurs disques  RAID, snapshots, déduplication. Pour un firewall qui stocke uniquement sa configuration et ses logs, UFS est largement suffisant et plus léger.
  
 **Étape 3 — Avertissement RAM**
 L'installeur affiche :
@@ -466,14 +466,14 @@ Cliquer `Proceed anyway` — OPNsense fonctionne parfaitement avec 2 Go pour un 
  
 **Étape 4 — Sélection du disque**
  
-Sélectionner `ada0 — QEMU HARDDISK (20GB)`.
+Sélectionner `ada0  QEMU HARDDISK (20GB)`.
  
 > Attention à ne pas sélectionner `cd0` qui est l'ISO.
  
 **Étape 5 — Confirmation**
  
 Confirmer l'effacement du disque — `YES`.
-![Console OPNsense — installation](images/opnsense4.png)
+![Console OPNsense  installation](images/opnsense4.png)
  
 **Étape 6 — Mot de passe root**
  
@@ -481,7 +481,7 @@ Définir un mot de passe fort pour le compte root.
  
 L'installation dure environ 2 à 3 minutes. Le système redémarre automatiquement.
  
-![Console OPNsense — installation](images/opnsense6.png)
+![Console OPNsense  installation](images/opnsense6.png)
  
 ---
  
@@ -516,7 +516,7 @@ Login    : root
 Password : opnsense  (à changer immédiatement)
 ```
  
-> L'accès depuis le réseau domestique via le WAN est bloqué par la règle RFC1918 d'OPNsense — comportement documenté en Section 2. L'administration se fait exclusivement depuis le LAN.
+> L'accès depuis le réseau domestique via le WAN est bloqué par la règle RFC1918 d'OPNsense comportement documenté en Section 2. L'administration se fait exclusivement depuis le LAN.
  
 > **Contournement temporaire** : si aucune VM n'est encore disponible dans le LAN, il est possible de désactiver temporairement le firewall depuis la console OPNsense avec la commande `pfctl -d`. Cela permet d'accéder à l'interface via `https://192.168.1.x` depuis le réseau domestique. À réactiver immédiatement après configuration avec `pfctl -e`.
  
@@ -537,7 +537,7 @@ Login    : admin
 Password : opnsense  (à changer immédiatement)
 ```
  
-> L'accès depuis le réseau domestique via le WAN est bloqué par la règle RFC1918 d'OPNsense. L'administration se fait exclusivement depuis le LAN — bonne pratique en production.
+> L'accès depuis le réseau domestique via le WAN est bloqué par la règle RFC1918 d'OPNsense. L'administration se fait exclusivement depuis le LAN  bonne pratique en production.
  
 > **Contournement temporaire** si aucune VM n'est encore disponible dans le LAN : désactiver temporairement le firewall depuis la console OPNsense avec `pfctl -d`. Réactiver immédiatement après avec `pfctl -e`.
  
@@ -551,7 +551,7 @@ Password : opnsense  (à changer immédiatement)
 |-----------|--------|---------------|
 | Enable Unbound | Activé | Résolveur DNS central |
 | Listen Port | `53` | Port DNS standard |
-| Network Interfaces | `LAN` + `DMZ`  | WAN exclu — le DNS interne ne doit jamais être accessible depuis internet |
+| Network Interfaces | `LAN` + `DMZ`  | WAN exclu  le DNS interne ne doit jamais être accessible depuis internet |
 | DHCP Domain Override | `securlab.internal` | Domaine interne du lab |
 | Register ISC DHCP Leases | Activé | Enregistrement automatique des baux DHCP dans le DNS |
 
@@ -566,7 +566,7 @@ Password : opnsense  (à changer immédiatement)
  
 > Toute requête pour `*.securlab.internal` est redirigée vers Windows Server. Les domaines publics sont résolus directement via les serveurs DNS configurés dans `System` → `Settings` → `General`.
  
-![Configuration OPNsense — ](images/generale1.png)
+![Configuration OPNsense ](images/generale1.png)
  
 ---
  
@@ -578,10 +578,10 @@ Password : opnsense  (à changer immédiatement)
 |-----------|--------|---------------|
 | DNS Server 1 | `8.8.8.8` | Résolution domaines publics |
 | DNS Server 2 | `8.8.4.4` | Serveur de secours |
-| DNS search domain | `securlab.internal` | Résolution des noms courts |
+| DNS search domain | `domaine.internal` | Résolution des noms courts |
 | Allow DNS override | Désactivé | Empêche le FAI de remplacer nos DNS via DHCP WAN |
  
-> `Allow DNS override` désactivé est une bonne pratique — certains FAI redirigent les requêtes DNS vers des pages publicitaires ou effectuent de la surveillance.
+> `Allow DNS override` désactivé est une bonne pratique. certains FAI redirigent les requêtes DNS vers des pages publicitaires ou effectuent de la surveillance.
  ![Configuration OPNsense — ](images/generale1.png)
 ---
  
@@ -603,7 +603,7 @@ Toutes les VMs accèdent à internet via l'IP WAN d'OPNsense (`192.168.1.x`).
  
 ### Règles Firewall — Automatisées via Ansible
  
-Les règles firewall sont gérées via un playbook Ansible — voir le dossier `ansible/` du dépôt.
+Les règles firewall sont gérées via un playbook Ansible voir le dossier `ansible/` du dépôt.
  
 ```bash
 cd ansible/
